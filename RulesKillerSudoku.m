@@ -1,133 +1,142 @@
-% Generate a KillerSudoku grid
-grid = solvedKillerSudoku();
-
-% Generate cages based on the KillerSudoku grid
-cages = generateCages(grid);
-
-% Choose a random number of cells to fill
-numCellsToFill = randi([30, 40]);  
-
-% Generate puzzle based on the KillerSudoku grid
-puzzle = FillRandomCells(grid, numCellsToFill);
-
-function grid = solvedKillerSudoku()
-    % Create an empty 9x9 Sudoku grid
-    grid = zeros(9, 9);
-    % Fill the grid using the backtracking algorithm
-    grid = fillGrid(grid);
-
+function randomizedPuzzle = randomizeSolvedPuzzle(puzzle)
+    randomizedPuzzle = puzzle;
+    numSwaps = randi([5, 10]);  % Random number of swaps
     
-end
-
-function grid = fillGrid(grid)
-    % Find the next empty cell (cell with value 0)
-    emptyCell = find(grid == 0, 1);
-    % If there are no empty cells, the grid is fully filled
-    if isempty(emptyCell)
-        return;
-    end
-    % Convert linear index to row and column indices
-    [row, col] = ind2sub(size(grid), emptyCell);
-
-    % Shuffle numbers 1-9 to ensure randomness
-    numbers = randperm(9);
-    for num = numbers
-        % Check if the number is valid for the current cell
-        if isValid(grid, row, col, num)
-            % Place the number in the cell
-            grid(row, col) = num;
-            % Recursively fill the rest of the grid
-            grid = fillGrid(grid);
-            % If the grid is fully filled, return the grid
-            if all(grid(:) ~= 0)
-                return;
-            end
-            % If not, backtrack by resetting the cell to 0
-            grid(row, col) = 0;
+    for i = 1:numSwaps
+        switch randi([1, 4])
+            case 1
+                % Swap two rows within the same block
+                block = randi([0, 2]);
+                row1 = block * 3 + randi([1, 3]);
+                row2 = block * 3 + randi([1, 3]);
+                while row1 == row2
+                    row2 = block * 3 + randi([1, 3]);
+                end
+                temp = randomizedPuzzle(row1, :);
+                randomizedPuzzle(row1, :) = randomizedPuzzle(row2, :);
+                randomizedPuzzle(row2, :) = temp;
+            case 2
+                % Swap two columns within the same block
+                block = randi([0, 2]);
+                col1 = block * 3 + randi([1, 3]);
+                col2 = block * 3 + randi([1, 3]);
+                while col1 == col2
+                    col2 = block * 3 + randi([1, 3]);
+                end
+                temp = randomizedPuzzle(:, col1);
+                randomizedPuzzle(:, col1) = randomizedPuzzle(:, col2);
+                randomizedPuzzle(:, col2) = temp;
+            case 3
+                % Swap two row blocks
+                block1 = randi([0, 2]);
+                block2 = randi([0, 2]);
+                while block1 == block2
+                    block2 = randi([0, 2]);
+                end
+                rows1 = (block1 * 3 + 1):(block1 * 3 + 3);
+                rows2 = (block2 * 3 + 1):(block2 * 3 + 3);
+                temp = randomizedPuzzle(rows1, :);
+                randomizedPuzzle(rows1, :) = randomizedPuzzle(rows2, :);
+                randomizedPuzzle(rows2, :) = temp;
+            case 4
+                % Swap two column blocks
+                block1 = randi([0, 2]);
+                block2 = randi([0, 2]);
+                while block1 == block2
+                    block2 = randi([0, 2]);
+                end
+                cols1 = (block1 * 3 + 1):(block1 * 3 + 3);
+                cols2 = (block2 * 3 + 1):(block2 * 3 + 3);
+                temp = randomizedPuzzle(:, cols1);
+                randomizedPuzzle(:, cols1) = randomizedPuzzle(:, cols2);
+                randomizedPuzzle(:, cols2) = temp;
         end
     end
 end
-
-function isValid = isValid(grid, row, col, num)
-    % Check if the number is already in the current row, column, or 3x3 subgrid
-    isValid = ~ismember(num, grid(row, :)) && ...
-              ~ismember(num, grid(:, col)) && ...
-              ~ismember(num, grid(3*floor((row-1)/3) + 1:3*floor((row-1)/3) + 3, 3*floor((col-1)/3) + 1:3*floor((col-1)/3) + 3));
-end
-
-function cages = generateCages(grid)
-    % Randomly order the cells in the grid
-    cells = randperm(81);
-    % Create a logical matrix to keep track of visited cells
-    visited = false(9, 9);
+function [partialPuzzle, cages] = generateRandomKillerSudoku(solvedPuzzle)
+    % Initialize variables
+    partialPuzzle = zeros(9, 9);
+    cells = 1:81;
+    numCages = 10; % Number of cages
     cages = [];
-    cageIndex = 1;
-
-    % Continue until all cells have been visited
-    while any(~visited(:))
-        % Get the first unvisited cell
-        currentCell = cells(find(~visited(cells), 1));
-        [r, c] = ind2sub([9, 9], currentCell);
-        cageCells = [];
-        cageSum = 0;
-
-        % Create a cage with a minimum sum and size constraints
-        while cageSum < 10 || length(cageCells) < 2
-            % Add the current cell to the cage
-            cageCells(end+1) = sub2ind([9, 9], r, c);
-            
-            visited(r, c) = true;
-            cageSum = sum(grid(cageCells));
-
-            % Get neighboring cells that haven't been visited
-            neighbors = getNeighbors(r, c, visited);
-            if isempty(neighbors)
-                break;
-            end
-            % Select a random neighbor to continue building the cage
-            nextCell = neighbors(randi(length(neighbors)));
-            [r, c] = ind2sub([9, 9], nextCell);
-        end
-
+    
+     % Predefined list of colors in hexadecimal format
+   colorPool = {
+    '#FF0000',  % Red
+    '#00FF00',  % Green
+    '#0000FF',  % Blue
+    '#FFFF00',  % Yellow
+    '#FF00FF',  % Magenta
+    '#00FFFF',  % Cyan
+    '#FFA500',  % Orange
+    '#800080',  % Purple
+    '#fabed4',  % Pink
+    '#9A6324'  % Brown
+    
+};
+    
+   % Extend and shuffle the color pool if necessary
+    if numCages > length(colorPool)
+        colorPool = repmat(colorPool, 1, ceil(numCages / length(colorPool)));
+    end
+    shuffledColors = colorPool(randperm(numCages));
+    
+    
+    % Shuffle cells for random cage 
+    cells = cells(randperm(length(cells)));
+    
+    % Distribute cells into cages
+    for i = 1:numCages
+        
+        
+        % Randomly decide the size of the cage
+        cageSize = randi([2, min(3, length(cells))]);
+        
+        % Get the indices of the cells 
+        cageCells = cells(1:cageSize);
+        cells(1:cageSize) = [];  % Remove used cells
+        
+        % Convert linear indices to row, col pairs
+        [rows, cols] = ind2sub([9, 9], cageCells);
+        cellPositions = [rows', cols'];
+        
+        % Calculate the sum of the values 
+        sumValue = sum(solvedPuzzle(sub2ind(size(solvedPuzzle), rows', cols')));
+        
+        % Assign a color from the shuffled list
+        color = shuffledColors{i};
+        
         % Store the cage information
-        cages(cageIndex).cells = cageCells;
-        cages(cageIndex).sum = cageSum;
-        cageIndex = cageIndex + 1;
-    end
-end
-
-function neighbors = getNeighbors(r, c, visited)
-    % Define potential neighboring cells (up, down, left, right)
-    potentialNeighbors = [r-1 c; r+1 c; r c-1; r c+1];
-    % Keep only valid neighbors within grid bounds
-    validNeighbors = potentialNeighbors(all(potentialNeighbors > 0 & potentialNeighbors <= 9, 2), :);
-    % Return indices of unvisited valid neighbors
-    neighbors = sub2ind([9, 9], validNeighbors(~visited(sub2ind([9, 9], validNeighbors(:,1), validNeighbors(:,2))),1), validNeighbors(~visited(sub2ind([9, 9], validNeighbors(:,1), validNeighbors(:,2))),2));
-end
-
-function puzzle = FillRandomCells(grid, numCellsToExtract)
-    % Initialize extracted grid with zeros
-    puzzle = zeros(size(grid));
-
-    % Get indices of filled cells in the original grid
-    [filledRows, filledCols] = find(grid ~= 0);
-    numFilledCells = numel(filledRows);
-
-    % Randomly select indices to extract
-    if numCellsToExtract > numFilledCells
-        error('Number of cells to extract exceeds number of filled cells.');
-    end
-    
-    % Randomly permute indices of filled cells
-    permutedIndices = randperm(numFilledCells, numCellsToExtract);
-    
-    % Copy selected cells from original grid to extracted grid
-    for i = 1:numCellsToExtract
-        row = filledRows(permutedIndices(i));
-        col = filledCols(permutedIndices(i));
-        puzzle(row, col) = grid(row, col);
+        cages = [cages; struct('cells', cellPositions, 'sum', sumValue, 'color', color)];
+        
+        % Place the values in the partial puzzle for visual clarity
+        for j = 1:fix(size(cellPositions, 1)/2)
+            partialPuzzle(cellPositions(j, 1), cellPositions(j, 2)) = ...
+                solvedPuzzle(cellPositions(j, 1), cellPositions(j, 2));
+        end
     end
 end
 
 
-save RulesKillerSudoku.mat puzzle grid cages
+
+baseSolvedPuzzle = [
+    5 3 4 6 7 8 9 1 2;
+    6 7 2 1 9 5 3 4 8;
+    1 9 8 3 4 2 5 6 7;
+    8 5 9 7 6 1 4 2 3;
+    4 2 6 8 5 3 7 9 1;
+    7 1 3 9 2 4 8 5 6;
+    9 6 1 5 3 7 2 8 4;
+    2 8 7 4 1 9 6 3 5;
+    3 4 5 2 8 6 1 7 9
+];
+
+% Randomize the solved puzzle
+solvedPuzzle = randomizeSolvedPuzzle(baseSolvedPuzzle);
+
+% Generate a random Killer Sudoku puzzle with random colors
+[partialPuzzle, cages] = generateRandomKillerSudoku(solvedPuzzle);
+
+save RulesKillerSudoku.mat partialPuzzle solvedPuzzle cages
+
+load('RulesKillerSudoku.mat')
