@@ -5,7 +5,7 @@
 
             %Set query to execute on the database
             query = ['Insert into score (gameMode,winner, timer )' ...
-               'Values("Sudoku", "' dataPlayer.name '","' dataPlayer.time '");' 
+               'Values("KillerSudoku", "' dataPlayer.name '","' dataPlayer.time '");' 
             ];
 
              
