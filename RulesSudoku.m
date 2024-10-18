@@ -20,9 +20,6 @@ partialPuzzle = generatePartialSudoku(solvedPuzzle);
 % Solve the partial puzzle
 solution = solveSudoku(partialPuzzle);
 
-disp('Solution:');
-disp(solution);
-
 % Function to randomize the solved Sudoku puzzle
 function randomizedPuzzle = randomizeSolvedPuzzle(puzzle)
     randomizedPuzzle = puzzle;
