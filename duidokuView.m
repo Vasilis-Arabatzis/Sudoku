@@ -3,7 +3,7 @@
 
 
             %Set query to execute on the database
-            query = ['SELECT winner,timer,gameMode FROM score WHERE gameMode = "Duidoku";' 
+            query = ['SELECT winner,loser,timer,draw FROM score WHERE gameMode = "Duidoku" AND draw IS NOT NULL;' 
             ];
 
 

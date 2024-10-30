@@ -5,8 +5,8 @@
             if dataPlayer.draw == 0
 
                 %Set query to execute on the database
-                query = ['Insert into score (gameMode,winner, timer, loser )' ...
-                    'Values("Duidoku", "' dataPlayer.winner '","' dataPlayer.time '", "' dataPlayer.loser '");' 
+                query = ['Insert into score (gameMode,winner, timer, loser ,draw)' ...
+                    'Values("Duidoku", "' dataPlayer.winner '","' dataPlayer.time '", "' dataPlayer.loser '","Winner");' 
                 ];
             else
                 
